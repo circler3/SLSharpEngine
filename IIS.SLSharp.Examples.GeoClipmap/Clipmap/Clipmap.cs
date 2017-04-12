@@ -5,6 +5,8 @@ using IIS.SLSharp.Examples.GeoClipmap.Shaders;
 using IIS.SLSharp.Shaders;
 using OpenTK;
 using OpenTK.Graphics.OpenGL;
+using System.Collections.Generic;
+using System.IO;
 
 namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 {
@@ -48,7 +50,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 
         private const int Hx = -D / 2;
 
-        private readonly Bitmap _testMap;
+        private float[,] _testMap;
 
         public int DValue
         {
@@ -81,16 +83,16 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
         {
 
             // wrap to positive values
-            x %= _testMap.Width;
+            x %= _testMap.GetLength(0);
             if (x < 0)
-                x += _testMap.Width;
-            y %= _testMap.Height;
+                x += _testMap.GetLength(0);
+            y %= _testMap.GetLength(1);
             if (y < 0)
-                y += _testMap.Height;
+                y += _testMap.GetLength(1);
 
-            return _testMap.GetPixel(x, y).G / 255.0f;
-             
-             
+            return _testMap[x, y];
+
+
 
             //if (x < 0 || y < 0)
             //    return 0.2f + 0.8f * (float)rng.NextDouble(); ;
@@ -100,13 +102,13 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             const float scale = 1.0f/D * 1.340f;
             return (float)(Math.Sin(y * Math.PI * scale) * Math.Sin(x * Math.PI * scale) * 0.5 + 0.5);
              */
-             
+
             /*
             if (y < 0)
                 return 0.0f;
             return Math.Min(y/255.0f, 1.0f);
              */
-             
+
         }
 
         private void GenerateTestTexture()
@@ -115,11 +117,13 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                 lvl.Recalculate();
         }
 
+        public Vector3 Center { get; set; }
+
         public Clipmap()
         {
             //_testMap = (Bitmap)Image.FromFile("height.png");
-            _testMap = (Bitmap)Image.FromFile(@"height.jpg");
-            
+            //_testMap = (Bitmap)Image.FromFile(@"height.jpg");
+            Center = FillTestMap();
 
             //Position = new IntFloatVector2(new IntFloat(-_testMap.Width / 4), new IntFloat(-_testMap.Height / 4));
 
@@ -140,6 +144,53 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 
             _initialized = true;
         }
+
+        private Vector3 FillTestMap()
+        {
+            _testMap = new float[5000, 5000];
+            Random ran = new Random();
+            for (int i = 0; i < _testMap.GetLength(0); i++)
+            {
+                for (int j = 0; j < _testMap.GetLength(1); j++)
+                {
+
+                    _testMap[i, j] = ran.Next(255) / 255f;
+                }
+            }
+            //return SaveAndFilter(@"C:\Users\Podolski\Desktop\FS\1.obj");
+            return new Vector3(0, 0, 0);
+        }
+
+        public Vector3 SaveAndFilter(string path)
+        {
+            //var meshInterval = 10;// * Convert.ToInt32(config.GetValue("General", "InsertPrecision", "Mesh"));
+            float xc = 0f, yc=0f, zc=0f;
+            int count= 0;
+            using (StreamReader sr = new StreamReader(path))
+            {
+                string line;
+                // the file is reached.
+                while ((line = sr.ReadLine()) != null)
+                {
+                    string[] ps = line.Split(' ');
+                    if (ps[0] == "v")
+                    {
+                        var x = Convert.ToInt32(ps[1]) / 200;
+                        var y = Convert.ToInt32(ps[2]) / 200;
+                        var z = Convert.ToInt32(ps[3]) / 200;
+                        _testMap[x, y] = z;
+                        xc += x; yc += y; zc += z;
+                        count++;
+                    }
+                    else
+                        continue;
+                }
+            }
+            return new Vector3(xc, yc, zc) / count;
+            //return xyz;
+        }
+
+
 
         private static void BeginDraw()
         {
@@ -172,7 +223,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             {
                 var lvl = _levels[i];
                 lvl.SetPosition2(p[i]);
-            } 
+            }
         }
 
         public void MoveBy(float dx, float dy)
@@ -200,11 +251,10 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             BeginDraw();
 
             _shader.NormalMatrix = normalMatrix.ToMatrix4F();
- 
+
             var vloc = Shader.AttributeLocation(_shader, () => _shader.Vertex);
 
             for (var i = ActiveMin; i < ActiveMax; i++)
-            
             {
                 var level = _levels[i];
 
@@ -234,6 +284,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                     var pp = p.Patch;
 
                     _shader.ScaleFactor = new Vector4(p.X + subX, p.Y + subY, level.Scale, (float)InverseD).ToVector4F();
+                    //_shader.ScaleFactor = new Vector4(0,0,0,1).ToVector4F();
                     _shader.FineBlockOrigin = new Vector4(p.X - Hx - texX, p.Y - Hx - texY, p.X - Hx, p.Y - Hx).ToVector4F();
                     pp.Draw(vloc);
                 }
@@ -438,7 +489,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             GL.PopMatrix();
             GL.MatrixMode(MatrixMode.Modelview);
             GL.PopMatrix();
-             
+
             /*
             var level = _levels[0];
             _debugShader.Begin();
