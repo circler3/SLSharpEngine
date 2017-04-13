@@ -148,7 +148,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 
         private Vector3 FillTestMap()
         {
-            _testMap = new float[10000, 10000];
+            _testMap = new float[50000, 50000];
             //Random ran = new Random();
             //for (int i = 0; i < _testMap.GetLength(0); i++)
             //{
@@ -157,7 +157,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             //        _testMap[i, j] = ran.Next(255) / 255f;
             //    }
             //}            
-            SaveAndFilter(@"C:\daici.obj");
+            SaveAndFilter(@"C:\Users\gaoduan\desktop\213.obj");
 
             return new Vector3(0, 0, 0);
         }
@@ -168,6 +168,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             float xc = 0f, yc=0f, zc=0f;
             int count= 0;
             List<Vertex> list = new List<Vertex>();
+            Dictionary<Tuple<int, int>, float> dict = new Dictionary<Tuple<int, int>, float>();
             using (StreamReader sr = new StreamReader(path))
             {
                 string line;
@@ -177,11 +178,11 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                     string[] ps = line.Split(' ');
                     if (ps[0] == "v")
                     {
-                        var x = Convert.ToInt32(ps[1]) / 100;
-                        var y = Convert.ToInt32(ps[2]) / 100;
-                        var z = Convert.ToInt32(ps[3]) / 20000f;
+                        var x = Convert.ToInt32(ps[1]) / 20;
+                        var y = Convert.ToInt32(ps[2]) / 20;
+                        var z = (Convert.ToInt32(ps[3]))/ 8000f;
                         if (z > 1.0) continue;
-                        list.Add(new Vertex(x, y, z));
+                        dict[new Tuple<int, int>(x, y)] = z;
                         xc += x; yc += y; zc += z;
                         count++;
                     }
@@ -189,6 +190,11 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                         continue;
                 }
             }
+            foreach (var n in dict)
+            {
+                list.Add(new Vertex(n.Key.Item1, n.Key.Item2, n.Value));
+            }
+            //System.Threading.Tasks.Parallel.ForEach(dict, (x) => list.Add(new Vertex(x.Key.Item1, x.Key.Item2, x.Value)));
             Triangulation tr = new Triangulation(ref _testMap, list);
             return new Vector3(xc, yc, zc) / count;
             //return xyz;

@@ -181,7 +181,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap
                 if (_wireFrame)
                     GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Line);
 
-                _clipmap.Render(mod * proj, mod, false);
+                _clipmap.Render(mod * proj, mod, true);
                 GL.PolygonMode(MaterialFace.FrontAndBack, PolygonMode.Fill);
             }
 
