@@ -76,6 +76,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Shaders\ClipmapShader.cs" />
     <Compile Include="Shaders\DebugShader.cs" />
+    <Compile Include="Triangulation.cs" />
     <Compile Include="Utilities.cs" />
   </ItemGroup>
   <ItemGroup>
@@ -92,6 +93,10 @@
     <ProjectReference Include="..\IIS.SLSharp\IIS.SLSharp.csproj">
       <Project>{ECF58025-4591-4708-8EC9-4B95A5673DDA}</Project>
       <Name>IIS.SLSharp</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Triangle\Triangle.csproj">
+      <Project>{f7907a0a-b75f-400b-9e78-bfad00db4d6b}</Project>
+      <Name>Triangle</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

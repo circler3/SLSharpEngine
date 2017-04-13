@@ -7,6 +7,7 @@ using OpenTK;
 using OpenTK.Graphics.OpenGL;
 using System.Collections.Generic;
 using System.IO;
+using TriangleNet.Geometry;
 
 namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 {
@@ -147,17 +148,17 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
 
         private Vector3 FillTestMap()
         {
-            _testMap = new float[5000, 5000];
-            Random ran = new Random();
-            for (int i = 0; i < _testMap.GetLength(0); i++)
-            {
-                for (int j = 0; j < _testMap.GetLength(1); j++)
-                {
+            _testMap = new float[10000, 10000];
+            //Random ran = new Random();
+            //for (int i = 0; i < _testMap.GetLength(0); i++)
+            //{
+            //    for (int j = 0; j < _testMap.GetLength(1); j++)
+            //    {
+            //        _testMap[i, j] = ran.Next(255) / 255f;
+            //    }
+            //}            
+            SaveAndFilter(@"C:\daici.obj");
 
-                    _testMap[i, j] = ran.Next(255) / 255f;
-                }
-            }
-            //return SaveAndFilter(@"C:\Users\Podolski\Desktop\FS\1.obj");
             return new Vector3(0, 0, 0);
         }
 
@@ -166,6 +167,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
             //var meshInterval = 10;// * Convert.ToInt32(config.GetValue("General", "InsertPrecision", "Mesh"));
             float xc = 0f, yc=0f, zc=0f;
             int count= 0;
+            List<Vertex> list = new List<Vertex>();
             using (StreamReader sr = new StreamReader(path))
             {
                 string line;
@@ -175,10 +177,11 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                     string[] ps = line.Split(' ');
                     if (ps[0] == "v")
                     {
-                        var x = Convert.ToInt32(ps[1]) / 200;
-                        var y = Convert.ToInt32(ps[2]) / 200;
-                        var z = Convert.ToInt32(ps[3]) / 200;
-                        _testMap[x, y] = z;
+                        var x = Convert.ToInt32(ps[1]) / 100;
+                        var y = Convert.ToInt32(ps[2]) / 100;
+                        var z = Convert.ToInt32(ps[3]) / 20000f;
+                        if (z > 1.0) continue;
+                        list.Add(new Vertex(x, y, z));
                         xc += x; yc += y; zc += z;
                         count++;
                     }
@@ -186,6 +189,7 @@ namespace IIS.SLSharp.Examples.GeoClipmap.Clipmap
                         continue;
                 }
             }
+            Triangulation tr = new Triangulation(ref _testMap, list);
             return new Vector3(xc, yc, zc) / count;
             //return xyz;
         }
